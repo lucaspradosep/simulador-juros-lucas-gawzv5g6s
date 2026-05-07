@@ -187,7 +187,7 @@ export default function Index() {
                     type="number"
                     min="0"
                     step="100"
-                    className="pl-9 bg-slate-50 focus-visible:ring-emerald-500"
+                    className="pl-9 h-11 text-base bg-slate-50 focus-visible:ring-emerald-500"
                     value={initialValue}
                     onChange={(e) =>
                       setInitialValue(e.target.value === '' ? '' : Number(e.target.value))
@@ -209,7 +209,7 @@ export default function Index() {
                     type="number"
                     min="0"
                     step="100"
-                    className="pl-9 bg-slate-50 focus-visible:ring-emerald-500"
+                    className="pl-9 h-11 text-base bg-slate-50 focus-visible:ring-emerald-500"
                     value={monthlyValue}
                     onChange={(e) =>
                       setMonthlyValue(e.target.value === '' ? '' : Number(e.target.value))
@@ -229,7 +229,7 @@ export default function Index() {
                       type="number"
                       min="0"
                       step="0.1"
-                      className="pr-8 bg-slate-50 focus-visible:ring-emerald-500"
+                      className="pr-8 h-11 text-base bg-slate-50 focus-visible:ring-emerald-500"
                       value={interestRate}
                       onChange={(e) =>
                         setInterestRate(e.target.value === '' ? '' : Number(e.target.value))
@@ -243,17 +243,17 @@ export default function Index() {
                     type="single"
                     value={rateType}
                     onValueChange={(val) => val && setRateType(val as 'mensal' | 'anual')}
-                    className="bg-slate-100 rounded-md p-1"
+                    className="bg-slate-100 rounded-md p-1 h-11"
                   >
                     <ToggleGroupItem
                       value="mensal"
-                      className="text-xs px-2 h-8 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                      className="text-sm px-3 h-9 data-[state=on]:bg-white data-[state=on]:shadow-sm"
                     >
                       Mensal
                     </ToggleGroupItem>
                     <ToggleGroupItem
                       value="anual"
-                      className="text-xs px-2 h-8 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                      className="text-sm px-3 h-9 data-[state=on]:bg-white data-[state=on]:shadow-sm"
                     >
                       Anual
                     </ToggleGroupItem>
@@ -269,7 +269,7 @@ export default function Index() {
                       id="periodValue"
                       type="number"
                       min="1"
-                      className="bg-slate-50 focus-visible:ring-emerald-500"
+                      className="h-11 text-base bg-slate-50 focus-visible:ring-emerald-500"
                       value={periodValue}
                       onChange={(e) =>
                         setPeriodValue(e.target.value === '' ? '' : Number(e.target.value))
@@ -280,17 +280,17 @@ export default function Index() {
                     type="single"
                     value={periodType}
                     onValueChange={(val) => val && setPeriodType(val as 'anos' | 'meses')}
-                    className="bg-slate-100 rounded-md p-1"
+                    className="bg-slate-100 rounded-md p-1 h-11"
                   >
                     <ToggleGroupItem
                       value="anos"
-                      className="text-xs px-2 h-8 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                      className="text-sm px-3 h-9 data-[state=on]:bg-white data-[state=on]:shadow-sm"
                     >
                       Anos
                     </ToggleGroupItem>
                     <ToggleGroupItem
                       value="meses"
-                      className="text-xs px-2 h-8 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                      className="text-sm px-3 h-9 data-[state=on]:bg-white data-[state=on]:shadow-sm"
                     >
                       Meses
                     </ToggleGroupItem>
@@ -300,7 +300,7 @@ export default function Index() {
 
               <Button
                 onClick={scrollToResults}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white lg:hidden mt-4 transition-all duration-300 active:scale-[0.98]"
+                className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white lg:hidden mt-4 transition-all duration-300 active:scale-[0.98]"
               >
                 Ver Resultados <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -327,7 +327,7 @@ export default function Index() {
               <CardContent className="p-6 flex flex-col justify-center h-full">
                 <div className="flex items-center gap-2 mb-1">
                   <PiggyBank className="h-4 w-4 text-slate-400" />
-                  <p className="text-sm font-medium text-slate-500">Valor Investido</p>
+                  <p className="text-sm font-medium text-slate-500">Total Investido</p>
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900">
                   <AnimatedCurrency value={summary.invested} />
@@ -339,7 +339,7 @@ export default function Index() {
               <CardContent className="p-6 flex flex-col justify-center h-full">
                 <div className="flex items-center gap-2 mb-1">
                   <TrendingUp className="h-4 w-4 text-emerald-500" />
-                  <p className="text-sm font-medium text-slate-500">Valor com Juros</p>
+                  <p className="text-sm font-medium text-slate-500">Valor em Juros</p>
                 </div>
                 <h3 className="text-2xl font-bold text-emerald-600">
                   <AnimatedCurrency value={summary.interest} />
@@ -360,7 +360,7 @@ export default function Index() {
                 onClick={handleDownloadChart}
                 variant="outline"
                 size="sm"
-                className="shrink-0 gap-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                className="shrink-0 gap-2 h-11 sm:h-9 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
               >
                 <Download className="h-4 w-4" /> Baixar Gráfico
               </Button>
