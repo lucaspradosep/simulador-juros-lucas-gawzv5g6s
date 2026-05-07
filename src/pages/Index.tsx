@@ -132,7 +132,7 @@ export default function Index() {
     const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement
 
     clonedSvg.style.backgroundColor = '#ffffff'
-    clonedSvg.style.fontFamily = 'system-ui, sans-serif'
+    clonedSvg.style.fontFamily = 'system-ui, -apple-system, sans-serif'
 
     const width =
       parseInt(clonedSvg.getAttribute('width') || clonedSvg.clientWidth.toString()) || 800
@@ -145,22 +145,119 @@ export default function Index() {
     const svgData = new XMLSerializer().serializeToString(clonedSvg)
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const isMobile = width < 600
+    const padding = 24
+    const headerHeight = isMobile ? 320 : 140
+
     canvas.width = width
-    canvas.height = height
+    canvas.height = height + headerHeight + padding
 
     const img = new Image()
     img.onload = () => {
-      if (ctx) {
+      // Background
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Title
+      ctx.fillStyle = '#064e3b'
+      ctx.font = 'bold 24px system-ui, -apple-system, sans-serif'
+      ctx.fillText('Simulador de Juros', padding, padding + 20)
+
+      const metricsY = padding + 40
+
+      if (isMobile) {
+        const boxHeight = 70
+        const spacing = 12
+
+        // Box 1 (Total Final)
+        ctx.fillStyle = '#10b981'
+        ctx.fillRect(padding, metricsY, width - padding * 2, boxHeight)
+        ctx.fillStyle = '#d1fae5'
+        ctx.font = '500 12px system-ui, -apple-system, sans-serif'
+        ctx.fillText('Valor Total Final', padding + 16, metricsY + 26)
         ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        ctx.drawImage(img, 0, 0)
-        const a = document.createElement('a')
-        a.download = 'simulador-evolucao.png'
-        a.href = canvas.toDataURL('image/png')
-        a.click()
+        ctx.font = 'bold 20px system-ui, -apple-system, sans-serif'
+        ctx.fillText(formatCurrencyLabel(summary.total), padding + 16, metricsY + 52)
+
+        // Box 2 (Investido)
+        const box2Y = metricsY + boxHeight + spacing
+        ctx.fillStyle = '#f8fafc'
+        ctx.fillRect(padding, box2Y, width - padding * 2, boxHeight)
+        ctx.fillStyle = '#64748b'
+        ctx.font = '500 12px system-ui, -apple-system, sans-serif'
+        ctx.fillText('Total Investido', padding + 16, box2Y + 26)
+        ctx.fillStyle = '#0f172a'
+        ctx.font = 'bold 20px system-ui, -apple-system, sans-serif'
+        ctx.fillText(formatCurrencyLabel(summary.invested), padding + 16, box2Y + 52)
+
+        // Box 3 (Juros)
+        const box3Y = box2Y + boxHeight + spacing
+        ctx.fillStyle = '#f0fdf4'
+        ctx.fillRect(padding, box3Y, width - padding * 2, boxHeight)
+        ctx.fillStyle = '#10b981'
+        ctx.font = '500 12px system-ui, -apple-system, sans-serif'
+        ctx.fillText('Valor em Juros', padding + 16, box3Y + 26)
+        ctx.fillStyle = '#059669'
+        ctx.font = 'bold 20px system-ui, -apple-system, sans-serif'
+        ctx.fillText(formatCurrencyLabel(summary.interest), padding + 16, box3Y + 52)
+      } else {
+        const colWidth = (width - padding * 2) / 3
+
+        ctx.fillStyle = '#10b981'
+        ctx.fillRect(padding, metricsY, colWidth - 8, 80)
+
+        ctx.fillStyle = '#f8fafc'
+        ctx.fillRect(padding + colWidth + 4, metricsY, colWidth - 8, 80)
+
+        ctx.fillStyle = '#f0fdf4'
+        ctx.fillRect(padding + colWidth * 2 + 8, metricsY, colWidth - 8, 80)
+
+        // Box 1 (Total Final)
+        ctx.fillStyle = '#d1fae5'
+        ctx.font = '500 12px system-ui, -apple-system, sans-serif'
+        ctx.fillText('Valor Total Final', padding + 16, metricsY + 30)
+        ctx.fillStyle = '#ffffff'
+        ctx.font = 'bold 20px system-ui, -apple-system, sans-serif'
+        ctx.fillText(formatCurrencyLabel(summary.total), padding + 16, metricsY + 60)
+
+        // Box 2 (Investido)
+        ctx.fillStyle = '#64748b'
+        ctx.font = '500 12px system-ui, -apple-system, sans-serif'
+        ctx.fillText('Total Investido', padding + colWidth + 20, metricsY + 30)
+        ctx.fillStyle = '#0f172a'
+        ctx.font = 'bold 20px system-ui, -apple-system, sans-serif'
+        ctx.fillText(formatCurrencyLabel(summary.invested), padding + colWidth + 20, metricsY + 60)
+
+        // Box 3 (Juros)
+        ctx.fillStyle = '#10b981'
+        ctx.font = '500 12px system-ui, -apple-system, sans-serif'
+        ctx.fillText('Valor em Juros', padding + colWidth * 2 + 24, metricsY + 30)
+        ctx.fillStyle = '#059669'
+        ctx.font = 'bold 20px system-ui, -apple-system, sans-serif'
+        ctx.fillText(
+          formatCurrencyLabel(summary.interest),
+          padding + colWidth * 2 + 24,
+          metricsY + 60,
+        )
       }
+
+      // Draw SVG Image below
+      ctx.drawImage(img, 0, headerHeight + padding / 2)
+
+      const a = document.createElement('a')
+      a.download = 'simulador-evolucao.png'
+      a.href = canvas.toDataURL('image/png')
+      a.click()
+
+      const DOMURL = window.URL || window.webkitURL || window
+      DOMURL.revokeObjectURL(img.src)
     }
-    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
+    const DOMURL = window.URL || window.webkitURL || window
+    img.src = DOMURL.createObjectURL(svgBlob)
   }
 
   return (
