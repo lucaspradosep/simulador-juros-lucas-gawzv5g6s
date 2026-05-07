@@ -10,7 +10,7 @@ export default function Layout() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100">
               <Calculator className="h-6 w-6 text-emerald-600" />
             </div>
-            <span className="text-xl font-bold tracking-tight">Simulador de Juros Lucas Prado</span>
+            <span className="text-xl font-bold tracking-tight">Simulador</span>
           </div>
         </div>
       </header>
@@ -21,7 +21,7 @@ export default function Layout() {
 
       <footer className="border-t bg-white py-8">
         <div className="container mx-auto flex flex-col items-center justify-center gap-2 px-4 md:px-6 lg:px-8 text-center">
-          <p className="text-sm font-medium text-emerald-900">Simulador de Juros Lucas Prado</p>
+          <p className="text-sm font-medium text-emerald-900">Simulador</p>
           <p className="text-xs text-slate-500">
             © {new Date().getFullYear()} Todos os direitos reservados. Feito para visualizar o poder
             dos juros compostos.

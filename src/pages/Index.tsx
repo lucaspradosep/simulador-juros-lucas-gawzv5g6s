@@ -12,8 +12,8 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { ArrowRight, TrendingUp, PiggyBank, Target } from 'lucide-react'
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { ArrowRight, TrendingUp, PiggyBank, Target, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function AnimatedCurrency({ value, className }: { value: number; className?: string }) {
@@ -48,13 +48,13 @@ function AnimatedCurrency({ value, className }: { value: number; className?: str
 }
 
 const chartConfig = {
-  total: {
-    label: 'Total Acumulado',
-    color: 'hsl(var(--primary))',
-  },
   invested: {
-    label: 'Total Investido',
-    color: 'hsl(var(--muted-foreground))',
+    label: 'Total de Valor Investido',
+    color: '#34d399', // emerald-400
+  },
+  interest: {
+    label: 'Total de Juros',
+    color: '#059669', // emerald-600
   },
 } satisfies ChartConfig
 
@@ -63,17 +63,16 @@ export default function Index() {
   const [monthlyValue, setMonthlyValue] = useState<number | ''>(500)
   const [interestRate, setInterestRate] = useState<number | ''>(10)
   const [rateType, setRateType] = useState<'mensal' | 'anual'>('anual')
-  const [years, setYears] = useState<number | ''>(10)
-  const [months, setMonths] = useState<number | ''>(0)
+  const [periodValue, setPeriodValue] = useState<number | ''>(10)
+  const [periodType, setPeriodType] = useState<'anos' | 'meses'>('anos')
 
   const { data, summary } = useMemo(() => {
     const p = Number(initialValue) || 0
     const pmt = Number(monthlyValue) || 0
     const rate = Number(interestRate) || 0
-    const y = Number(years) || 0
-    const m = Number(months) || 0
+    const pVal = Number(periodValue) || 0
 
-    const totalMonths = y * 12 + m
+    const totalMonths = periodType === 'anos' ? pVal * 12 : pVal
     const r = rateType === 'anual' ? Math.pow(1 + rate / 100, 1 / 12) - 1 : rate / 100
 
     const chartData = []
@@ -84,22 +83,21 @@ export default function Index() {
       month: 0,
       label: 'Início',
       invested: currentInvested,
-      total: currentTotal,
       interest: 0,
+      total: currentTotal,
     })
 
     for (let i = 1; i <= totalMonths; i++) {
       currentTotal = currentTotal * (1 + r) + pmt
       currentInvested += pmt
 
-      // Reduce data points for very long periods to keep chart performant and readable
       if (totalMonths <= 36 || i === totalMonths || i % 12 === 0) {
         chartData.push({
           month: i,
           label: i % 12 === 0 ? `${i / 12} ano${i / 12 > 1 ? 's' : ''}` : `${i} meses`,
           invested: currentInvested,
-          total: currentTotal,
           interest: currentTotal - currentInvested,
+          total: currentTotal,
         })
       }
     }
@@ -110,7 +108,7 @@ export default function Index() {
         : { invested: p, total: p, interest: 0 }
 
     return { data: chartData, summary: summaryData }
-  }, [initialValue, monthlyValue, interestRate, rateType, years, months])
+  }, [initialValue, monthlyValue, interestRate, rateType, periodValue, periodType])
 
   const formatYAxis = (val: number) => {
     if (val >= 1000000) return `R$ ${(val / 1000000).toFixed(1)}M`
@@ -124,6 +122,45 @@ export default function Index() {
 
   const scrollToResults = () => {
     document.getElementById('resultados')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const handleDownloadChart = () => {
+    const chartWrapper = document.getElementById('chart-container')
+    const svgElement = chartWrapper?.querySelector('svg')
+    if (!svgElement) return
+
+    const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement
+
+    clonedSvg.style.backgroundColor = '#ffffff'
+    clonedSvg.style.fontFamily = 'system-ui, sans-serif'
+
+    const width =
+      parseInt(clonedSvg.getAttribute('width') || clonedSvg.clientWidth.toString()) || 800
+    const height =
+      parseInt(clonedSvg.getAttribute('height') || clonedSvg.clientHeight.toString()) || 400
+
+    clonedSvg.setAttribute('width', width.toString())
+    clonedSvg.setAttribute('height', height.toString())
+
+    const svgData = new XMLSerializer().serializeToString(clonedSvg)
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    canvas.width = width
+    canvas.height = height
+
+    const img = new Image()
+    img.onload = () => {
+      if (ctx) {
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, 0, 0)
+        const a = document.createElement('a')
+        a.download = 'simulador-evolucao.png'
+        a.href = canvas.toDataURL('image/png')
+        a.click()
+      }
+    }
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
   }
 
   return (
@@ -226,38 +263,38 @@ export default function Index() {
 
               <div className="space-y-2">
                 <Label className="text-slate-700">Período</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="relative">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
                     <Input
-                      id="years"
+                      id="periodValue"
                       type="number"
-                      min="0"
-                      className="pr-12 bg-slate-50 focus-visible:ring-emerald-500"
-                      value={years}
+                      min="1"
+                      className="bg-slate-50 focus-visible:ring-emerald-500"
+                      value={periodValue}
                       onChange={(e) =>
-                        setYears(e.target.value === '' ? '' : Number(e.target.value))
+                        setPeriodValue(e.target.value === '' ? '' : Number(e.target.value))
                       }
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+                  </div>
+                  <ToggleGroup
+                    type="single"
+                    value={periodType}
+                    onValueChange={(val) => val && setPeriodType(val as 'anos' | 'meses')}
+                    className="bg-slate-100 rounded-md p-1"
+                  >
+                    <ToggleGroupItem
+                      value="anos"
+                      className="text-xs px-2 h-8 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                    >
                       Anos
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <Input
-                      id="months"
-                      type="number"
-                      min="0"
-                      max="11"
-                      className="pr-14 bg-slate-50 focus-visible:ring-emerald-500"
-                      value={months}
-                      onChange={(e) =>
-                        setMonths(e.target.value === '' ? '' : Number(e.target.value))
-                      }
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="meses"
+                      className="text-xs px-2 h-8 data-[state=on]:bg-white data-[state=on]:shadow-sm"
+                    >
                       Meses
-                    </span>
-                  </div>
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
               </div>
 
@@ -290,7 +327,7 @@ export default function Index() {
               <CardContent className="p-6 flex flex-col justify-center h-full">
                 <div className="flex items-center gap-2 mb-1">
                   <PiggyBank className="h-4 w-4 text-slate-400" />
-                  <p className="text-sm font-medium text-slate-500">Total Investido</p>
+                  <p className="text-sm font-medium text-slate-500">Valor Investido</p>
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900">
                   <AnimatedCurrency value={summary.invested} />
@@ -302,7 +339,7 @@ export default function Index() {
               <CardContent className="p-6 flex flex-col justify-center h-full">
                 <div className="flex items-center gap-2 mb-1">
                   <TrendingUp className="h-4 w-4 text-emerald-500" />
-                  <p className="text-sm font-medium text-slate-500">Total em Juros</p>
+                  <p className="text-sm font-medium text-slate-500">Valor com Juros</p>
                 </div>
                 <h3 className="text-2xl font-bold text-emerald-600">
                   <AnimatedCurrency value={summary.interest} />
@@ -312,16 +349,29 @@ export default function Index() {
           </div>
 
           <Card className="shadow-elevation border-none transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="text-emerald-900">Evolução do Patrimônio</CardTitle>
-              <CardDescription>
-                Visualização do efeito dos juros compostos ao longo do tempo.
-              </CardDescription>
+            <CardHeader className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div>
+                <CardTitle className="text-emerald-900">Evolução do Patrimônio</CardTitle>
+                <CardDescription>
+                  Visualização do efeito dos juros compostos ao longo do tempo.
+                </CardDescription>
+              </div>
+              <Button
+                onClick={handleDownloadChart}
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+              >
+                <Download className="h-4 w-4" /> Baixar Gráfico
+              </Button>
             </CardHeader>
             <CardContent>
-              <div className="h-[350px] sm:h-[400px] w-full mt-4">
+              <div
+                id="chart-container"
+                className="h-[350px] sm:h-[400px] w-full mt-4 bg-white rounded-lg"
+              >
                 <ChartContainer config={chartConfig} className="h-full w-full">
-                  <LineChart data={data} margin={{ top: 20, right: 10, bottom: 20, left: 0 }}>
+                  <AreaChart data={data} margin={{ top: 20, right: 10, bottom: 20, left: 0 }}>
                     <CartesianGrid vertical={false} strokeDasharray="4 4" strokeOpacity={0.4} />
                     <XAxis
                       dataKey="label"
@@ -329,7 +379,7 @@ export default function Index() {
                       axisLine={false}
                       tickMargin={12}
                       minTickGap={40}
-                      className="text-xs font-medium"
+                      className="text-xs font-medium text-slate-500"
                     />
                     <YAxis
                       tickFormatter={formatYAxis}
@@ -337,53 +387,46 @@ export default function Index() {
                       axisLine={false}
                       tickMargin={12}
                       width={80}
-                      className="text-xs font-medium"
+                      className="text-xs font-medium text-slate-500"
                     />
                     <ChartTooltip
                       cursor={{
-                        stroke: 'var(--color-primary)',
+                        stroke: '#059669',
                         strokeWidth: 1,
                         strokeDasharray: '3 3',
                         opacity: 0.5,
                       }}
                       content={
                         <ChartTooltipContent
-                          formatter={(value, name, item) => {
-                            // Map generic names back to config labels explicitly if needed, but config does it
-                            return [formatCurrencyLabel(Number(value)), name]
-                          }}
+                          formatter={(value, name) => [formatCurrencyLabel(Number(value)), name]}
                         />
                       }
                     />
                     <ChartLegend content={<ChartLegendContent className="text-sm" />} />
 
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="invested"
                       name="invested"
-                      stroke="var(--color-invested)"
+                      stackId="1"
+                      stroke={chartConfig.invested.color}
+                      fill={chartConfig.invested.color}
+                      fillOpacity={0.6}
                       strokeWidth={2}
-                      strokeDasharray="5 5"
-                      dot={false}
-                      activeDot={{ r: 4, strokeWidth: 0, fill: 'var(--color-invested)' }}
                       animationDuration={1000}
                     />
-                    <Line
+                    <Area
                       type="monotone"
-                      dataKey="total"
-                      name="total"
-                      stroke="var(--color-total)"
-                      strokeWidth={3}
-                      dot={false}
-                      activeDot={{
-                        r: 6,
-                        strokeWidth: 2,
-                        fill: 'var(--background)',
-                        stroke: 'var(--color-total)',
-                      }}
+                      dataKey="interest"
+                      name="interest"
+                      stackId="1"
+                      stroke={chartConfig.interest.color}
+                      fill={chartConfig.interest.color}
+                      fillOpacity={0.6}
+                      strokeWidth={2}
                       animationDuration={1000}
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ChartContainer>
               </div>
             </CardContent>
